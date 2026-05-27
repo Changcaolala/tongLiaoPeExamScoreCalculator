@@ -1,1 +1,4 @@
 # tongLiaoPeExamScoreCalculator
+为方便老师和同学 用AI做了一个体育中考分数计算器
+仅限于通辽使用
+目前分数计算可能不准确 后续会不断完善
