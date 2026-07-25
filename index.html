@@ -108,6 +108,7 @@ input, select {
 }
 input:focus, select:focus {
   border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(64, 158, 255, 0.15);
 }
 .btn-primary {
   width: 100%;
@@ -123,6 +124,425 @@ input:focus, select:focus {
 }
 .btn-primary:hover {
   opacity: 0.92;
+}
+.btn-clear {
+  width: 100%;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 12px;
+}
+.btn-clear:hover {
+  background: rgba(128, 128, 128, 0.1);
+  border-color: var(--primary);
+}
+@media (prefers-color-scheme: dark) {
+  .btn-clear:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+}
+.result {
+  margin-top: var(--space4);
+  padding: var(--space4);
+  background: rgba(64, 158, 255, 0.08);
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  line-height: 1.8;
+}
+.result strong {
+  color: var(--primary);
+}
+@media (min-width: 900px) {
+  .desktop-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space4);
+  }
+}
+.time-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.time-unit {
+  font-size: 14px;
+  color: var(--hint);
+  width: 22px;
+  text-align: left;
+}
+/* MD3风格右上角GitHub图标 */
+.github-header {
+  max-width:1200px;
+  margin:0 auto;
+  padding:0 16px;
+  text-align:right;
+}
+.github-link {
+  display:inline-block;
+  width:36px;
+  height:36px;
+  padding:6px;
+  border-radius:12px;
+  background:rgba(0,0,0,0.04);
+  color:inherit;
+  transition:all 0.2s;
+}
+@media (prefers-color-scheme: dark) {
+  .github-link { background: rgba(255,255,255,0.06); }
+}
+.github-link:hover { background: rgba(0,0,0,0.1); }
+@media (prefers-color-scheme: dark) {
+  .github-link:hover { background: rgba(255,255,255,0.12); }
+}
+</style>
+</head>
+<body>
+<div class="github-header">
+  <a class="github-link" href="https://github.com/Changcaolala/tongLiaoPeExamScoreCalculator" target="_blank">
+    <svg viewBox="0 0 24 24" fill="currentColor" width="100%" height="100%">
+      <path d="M12,2A10,10 0 0,0 2,12C2,16.42 4.87,20.17 8.84,21.5C9.34,21.58 9.5,21.27 9.5,21C9.5,20.77 9.5,20.14 9.5,19.31C6.73,19.91 6.14,17.97 6.14,17.97C5.68,16.81 5.1,16.5 5.1,16.5C4.12,15.82 5.1,15.84 5.1,15.84C6.1,15.94 6.63,16.91 6.63,16.91C7.5,18.45 8.97,18 9.54,17.76C9.63,17.11 9.89,16.67 10.17,16.42C7.95,16.16 5.65,15.26 5.65,11.5C5.65,10.39 6.06,9.5 6.77,8.79C6.65,8.54 6.31,7.5 6.8,6.15C6.8,6.15 7.59,5.88 9.5,7.17C10.29,6.94 11.15,6.82 12,6.82C12.85,6.82 13.71,6.94 14.5,7.17C16.41,5.88 17.2,6.15 17.2,6.15C17.69,7.5 17.35,8.54 17.23,8.79C17.94,9.5 18.35,10.39 18.35,11.5C18.35,15.28 16.04,16.15 13.81,16.41C14.17,16.72 14.5,17.33 14.5,18.26C14.5,19.6 14.5,20.68 14.5,21C14.5,21.27 14.66,21.59 15.17,21.5C19.13,20.16 22,16.42 22,12A10,10 0 0,0 12,2Z" />
+    </svg>
+  </a>
+</div>
+
+<div class="container">
+  <div class="card">
+    <div class="headline">通辽初中体育中考计算器</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>年级</label>
+        <select id="grade">
+          <option>七年级</option>
+          <option>八年级</option>
+          <option>九年级</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>性别</label>
+        <select id="gender">
+          <option value="male">男生</option>
+          <option value="female">女生</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="title">测试成绩录入</div>
+    <div class="desktop-grid" id="inputArea"></div>
+  </div>
+
+  <div class="card">
+    <button class="btn-primary" onclick="calc()">计算成绩</button>
+    <button class="btn-clear" onclick="clearAll()">清空所有</button>
+    <div class="result" id="result"></div>
+  </div>
+</div>
+
+<script>
+const gradeSel = document.getElementById('grade');
+const genderSel = document.getElementById('gender');
+const inputArea = document.getElementById('inputArea');
+const resultBox = document.getElementById('result');
+
+const WEIGHT = {
+  bmi: 15, lung: 15, run50: 20, sit: 10, jump: 10, power: 10, runEnd: 20
+};
+
+const STANDARD = {
+  bmi: {
+    male: {
+      "七年级": [[15.5,22.1,100],[0,15.4,80],[22.2,24.9,80],[25,99,60]],
+      "八年级": [[15.7,22.5,100],[0,15.6,80],[22.6,25.2,80],[25.3,99,60]],
+      "九年级": [[15.8,22.8,100],[0,15.7,80],[22.9,26.0,80],[26.1,99,60]]
+    },
+    female: {
+      "七年级": [[14.8,21.7,100],[0,14.7,80],[21.8,24.4,80],[24.5,99,60]],
+      "八年级": [[15.3,22.2,100],[0,15.2,80],[22.3,24.8,80],[24.9,99,60]],
+      "九年级": [[16.0,22.6,100],[0,15.9,80],[22.7,25.1,80],[25.2,99,60]]
+    }
+  },
+  lung: {
+    male: {
+      "七年级":[{v:3640,s:100},{v:3520,s:95},{v:3400,s:90},{v:3150,s:85},{v:2900,s:80},{v:2780,s:78},{v:2660,s:76},{v:2540,s:74},{v:2420,s:72},{v:2300,s:70},{v:2180,s:68},{v:2060,s:66},{v:1940,s:64},{v:1820,s:62},{v:1700,s:60},{v:1600,s:50},{v:1500,s:40},{v:1400,s:30},{v:1300,s:20},{v:1200,s:10}],
+      "八年级":[{v:3940,s:100},{v:3820,s:95},{v:3700,s:90},{v:3450,s:85},{v:3200,s:80},{v:3080,s:78},{v:2960,s:76},{v:2840,s:74},{v:2720,s:72},{v:2600,s:70},{v:2480,s:68},{v:2360,s:66},{v:2240,s:64},{v:2120,s:62},{v:2000,s:60},{v:1890,s:50},{v:1780,s:40},{v:1670,s:30},{v:1560,s:20},{v:1450,s:10}],
+      "九年级":[{v:4240,s:100},{v:4120,s:95},{v:4000,s:90},{v:3750,s:85},{v:3500,s:80},{v:3380,s:78},{v:3260,s:76},{v:3140,s:74},{v:3020,s:72},{v:2900,s:70},{v:2780,s:68},{v:2660,s:66},{v:2540,s:64},{v:2420,s:62},{v:2300,s:60},{v:2180,s:50},{v:2060,s:40},{v:1940,s:30},{v:1820,s:20},{v:1700,s:10}]
+    },
+    female: {
+      "七年级":[{v:2750,s:100},{v:2650,s:95},{v:2550,s:90},{v:2450,s:85},{v:2350,s:80},{v:2250,s:78},{v:2150,s:76},{v:2050,s:74},{v:1950,s:72},{v:1850,s:70},{v:1750,s:68},{v:1650,s:66},{v:1550,s:64},{v:1450,s:62},{v:1350,s:60},{v:1310,s:50},{v:1270,s:40},{v:1230,s:30},{v:1190,s:20},{v:1150,s:10}],
+      "八年级":[{v:2900,s:100},{v:2850,s:95},{v:2800,s:90},{v:2650,s:85},{v:2500,s:80},{v:2400,s:78},{v:2300,s:76},{v:2200,s:74},{v:2100,s:72},{v:2000,s:70},{v:1900,s:68},{v:1800,s:66},{v:1700,s:64},{v:1600,s:62},{v:1500,s:60},{v:1460,s:50},{v:1420,s:40},{v:1380,s:30},{v:1340,s:20},{v:1300,s:10}],
+      "九年级":[{v:3050,s:100},{v:2950,s:95},{v:2900,s:90},{v:2800,s:85},{v:2650,s:80},{v:2550,s:78},{v:2450,s:76},{v:2350,s:74},{v:2250,s:72},{v:2150,s:70},{v:2050,s:68},{v:1950,s:66},{v:1850,s:64},{v:1750,s:62},{v:1650,s:60},{v:1610,s:50},{v:1570,s:40},{v:1530,s:30},{v:1490,s:20},{v:1450,s:10}]
+    }
+  },
+  run50: {
+    male: {
+      "七年级":[{v:7.8,s:100},{v:7.9,s:95},{v:8.0,s:90},{v:8.1,s:85},{v:8.2,s:80},{v:8.4,s:78},{v:8.6,s:76},{v:8.8,s:74},{v:9.0,s:72},{v:9.2,s:70},{v:9.4,s:68},{v:9.6,s:66},{v:9.8,s:64},{v:10.0,s:62},{v:10.2,s:60},{v:10.4,s:50},{v:10.6,s:40},{v:10.8,s:30},{v:11.0,s:20},{v:11.2,s:10}],
+      "八年级":[{v:7.5,s:100},{v:7.6,s:95},{v:7.7,s:90},{v:7.8,s:85},{v:7.9,s:80},{v:8.1,s:78},{v:8.3,s:76},{v:8.5,s:74},{v:8.7,s:72},{v:8.9,s:70},{v:9.1,s:68},{v:9.3,s:66},{v:9.5,s:64},{v:9.7,s:62},{v:9.9,s:60},{v:10.1,s:50},{v:10.3,s:40},{v:10.5,s:30},{v:10.7,s:20},{v:10.9,s:10}],
+      "九年级":[{v:7.3,s:100},{v:7.4,s:95},{v:7.5,s:90},{v:7.6,s:85},{v:7.7,s:80},{v:7.9,s:78},{v:8.1,s:76},{v:8.3,s:74},{v:8.5,s:72},{v:8.7,s:70},{v:8.9,s:68},{v:9.1,s:66},{v:9.3,s:64},{v:9.5,s:62},{v:9.7,s:60},{v:9.9,s:50},{v:10.1,s:40},{v:10.3,s:30},{v:10.5,s:20},{v:10.7,s:10}]
+    },
+    female: {
+      "七年级":[{v:8.1,s:100},{v:8.2,s:95},{v:8.3,s:90},{v:8.6,s:85},{v:8.9,s:80},{v:9.1,s:78},{v:9.3,s:76},{v:9.5,s:74},{v:9.7,s:72},{v:9.9,s:70},{v:10.1,s:68},{v:10.3,s:66},{v:10.5,s:64},{v:10.7,s:62},{v:10.9,s:60},{v:11.1,s:50},{v:11.3,s:40},{v:11.5,s:30},{v:11.7,s:20},{v:11.9,s:10}],
+      "八年级":[{v:8.0,s:100},{v:8.1,s:95},{v:8.2,s:90},{v:8.5,s:85},{v:8.8,s:80},{v:9.0,s:78},{v:9.2,s:76},{v:9.4,s:74},{v:9.6,s:72},{v:9.8,s:70},{v:10.0,s:68},{v:10.2,s:66},{v:10.4,s:64},{v:10.6,s:62},{v:10.8,s:60},{v:11.0,s:50},{v:11.2,s:40},{v:11.4,s:30},{v:11.6,s:20},{v:11.8,s:10}],
+      "九年级":[{v:7.9,s:100},{v:8.0,s:95},{v:8.1,s:90},{v:8.4,s:85},{v:8.7,s:80},{v:8.9,s:78},{v:9.1,s:76},{v:9.3,s:74},{v:9.5,s:72},{v:9.7,s:70},{v:9.9,s:68},{v:10.1,s:66},{v:10.3,s:64},{v:10.5,s:62},{v:10.7,s:60},{v:10.9,s:50},{v:11.1,s:40},{v:11.3,s:30},{v:11.5,s:20},{v:11.7,s:10}]
+    }
+  },
+  sit: {
+    male: {
+      "七年级":[{v:17.6,s:100},{v:15.9,s:95},{v:14.2,s:90},{v:12.3,s:85},{v:10.4,s:80},{v:9.1,s:78},{v:7.8,s:76},{v:6.5,s:74},{v:5.2,s:72},{v:3.9,s:70},{v:2.6,s:68},{v:1.3,s:66},{v:0,s:64},{v:-1.3,s:62},{v:-2.6,s:60},{v:-3.8,s:50},{v:-5.0,s:40},{v:-6.2,s:30},{v:-7.4,s:20},{v:-8.6,s:10}],
+      "八年级":[{v:19.6,s:100},{v:17.7,s:95},{v:15.8,s:90},{v:13.7,s:85},{v:11.6,s:80},{v:10.3,s:78},{v:9.0,s:76},{v:7.7,s:74},{v:6.4,s:72},{v:5.1,s:70},{v:3.8,s:68},{v:2.5,s:66},{v:1.2,s:64},{v:-0.1,s:62},{v:-1.4,s:60},{v:-2.6,s:50},{v:-3.8,s:40},{v:-5.0,s:30},{v:-6.2,s:20},{v:-7.4,s:10}],
+      "九年级":[{v:21.6,s:100},{v:19.7,s:95},{v:17.8,s:90},{v:15.8,s:85},{v:13.8,s:80},{v:12.4,s:78},{v:11.0,s:76},{v:9.6,s:74},{v:8.2,s:72},{v:6.8,s:70},{v:5.4,s:68},{v:4.0,s:66},{v:2.6,s:64},{v:1.2,s:62},{v:-0.2,s:60},{v:-1.4,s:50},{v:-2.6,s:40},{v:-3.8,s:30},{v:-5.0,s:20},{v:-6.2,s:10}]
+    },
+    female: {
+      "七年级":[{v:21.8,s:100},{v:20.1,s:95},{v:18.4,s:90},{v:16.7,s:85},{v:15.0,s:80},{v:13.7,s:78},{v:12.4,s:76},{v:11.1,s:74},{v:9.8,s:72},{v:8.5,s:70},{v:7.2,s:68},{v:5.9,s:66},{v:4.6,s:64},{v:3.3,s:62},{v:2.0,s:60},{v:1.2,s:50},{v:0.4,s:40},{v:-0.4,s:30},{v:-1.2,s:20},{v:-2.0,s:10}],
+      "八年级":[{v:22.7,s:100},{v:21.0,s:95},{v:19.3,s:90},{v:17.6,s:85},{v:15.9,s:80},{v:14.6,s:78},{v:13.3,s:76},{v:12.0,s:74},{v:10.7,s:72},{v:9.4,s:70},{v:8.1,s:68},{v:6.8,s:66},{v:5.5,s:64},{v:4.2,s:62},{v:2.9,s:60},{v:2.1,s:50},{v:1.3,s:40},{v:0.5,s:30},{v:-0.3,s:20},{v:-1.1,s:10}],
+      "九年级":[{v:23.5,s:100},{v:21.8,s:95},{v:20.1,s:90},{v:18.4,s:85},{v:16.7,s:80},{v:15.4,s:78},{v:14.1,s:76},{v:12.8,s:74},{v:11.5,s:72},{v:10.2,s:70},{v:8.9,s:68},{v:7.6,s:66},{v:6.3,s:64},{v:5.0,s:62},{v:3.7,s:60},{v:2.9,s:50},{v:2.1,s:40},{v:1.3,s:30},{v:0.5,s:20},{v:-0.3,s:10}]
+    }
+  },
+  jump: {
+    male: {
+      "七年级":[{v:225,s:100},{v:218,s:95},{v:211,s:90},{v:203,s:85},{v:195,s:80},{v:191,s:78},{v:187,s:76},{v:183,s:74},{v:179,s:72},{v:175,s:70},{v:171,s:68},{v:167,s:66},{v:163,s:64},{v:159,s:62},{v:155,s:60},{v:150,s:50},{v:145,s:40},{v:140,s:30},{v:135,s:20},{v:130,s:10}],
+      "八年级":[{v:240,s:100},{v:233,s:95},{v:226,s:90},{v:218,s:85},{v:210,s:80},{v:206,s:78},{v:202,s:76},{v:198,s:74},{v:194,s:72},{v:190,s:70},{v:186,s:68},{v:182,s:66},{v:178,s:64},{v:174,s:62},{v:170,s:60},{v:165,s:50},{v:160,s:40},{v:155,s:30},{v:150,s:20},{v:145,s:10}],
+      "九年级":[{v:250,s:100},{v:245,s:95},{v:240,s:90},{v:233,s:85},{v:225,s:80},{v:221,s:78},{v:217,s:76},{v:213,s:74},{v:209,s:72},{v:205,s:70},{v:201,s:68},{v:197,s:66},{v:193,s:64},{v:189,s:62},{v:185,s:60},{v:180,s:50},{v:175,s:40},{v:170,s:30},{v:165,s:20},{v:160,s:10}]
+    },
+    female: {
+      "七年级":[{v:196,s:100},{v:190,s:95},{v:184,s:90},{v:177,s:85},{v:170,s:80},{v:167,s:78},{v:164,s:76},{v:161,s:74},{v:158,s:72},{v:155,s:70},{v:152,s:68},{v:149,s:66},{v:146,s:64},{v:143,s:62},{v:140,s:60},{v:135,s:50},{v:130,s:40},{v:125,s:30},{v:120,s:20},{v:115,s:10}],
+      "八年级":[{v:200,s:100},{v:194,s:95},{v:188,s:90},{v:181,s:85},{v:174,s:80},{v:171,s:78},{v:168,s:76},{v:165,s:74},{v:162,s:72},{v:159,s:70},{v:156,s:68},{v:153,s:66},{v:150,s:64},{v:147,s:62},{v:144,s:60},{v:139,s:50},{v:134,s:40},{v:129,s:30},{v:124,s:20},{v:119,s:10}],
+      "九年级":[{v:202,s:100},{v:196,s:95},{v:190,s:90},{v:183,s:85},{v:176,s:80},{v:173,s:78},{v:170,s:76},{v:167,s:74},{v:164,s:72},{v:161,s:70},{v:158,s:68},{v:155,s:66},{v:152,s:64},{v:149,s:62},{v:146,s:60},{v:141,s:50},{v:136,s:40},{v:131,s:30},{v:126,s:20},{v:121,s:10}]
+    }
+  },
+  power: {
+    male: {
+      "七年级": [{v:13,s:100},{v:12,s:95},{v:11,s:90},{v:10,s:85},{v:9,s:80},{v:8,s:76},{v:7,s:72},{v:6,s:68},{v:5,s:64},{v:4,s:60},{v:3,s:50},{v:2,s:40},{v:1,s:30}],
+       "八年级": [{v:14,s:100},{v:13,s:95},{v:12,s:90},{v:11,s:85},{v:10,s:80},{v:9,s:76},{v:8,s:72},{v:7,s:68},{v:6,s:64},{v:5,s:60},{v:4,s:50},{v:3,s:40},{v:2,s:30},{v:1,s:20}],
+       "九年级": [{v:15,s:100},{v:14,s:95},{v:13,s:90},{v:12,s:85},{v:11,s:80},{v:10,s:76},{v:9,s:72},{v:8,s:68},{v:7,s:64},{v:6,s:60},{v:5,s:50},{v:4,s:40},{v:3,s:30},{v:2,s:20},{v:1,s:10}]
+    },
+    female: {
+      "七年级":[{v:50,s:100},{v:48,s:95},{v:46,s:90},{v:43,s:85},{v:40,s:80},{v:38,s:78},{v:36,s:76},{v:34,s:74},{v:32,s:72},{v:30,s:70},{v:28,s:68},{v:26,s:66},{v:24,s:64},{v:22,s:62},{v:20,s:60},{v:18,s:50},{v:16,s:40},{v:14,s:30},{v:12,s:20},{v:10,s:10}],
+      "八年级":[{v:51,s:100},{v:49,s:95},{v:47,s:90},{v:44,s:85},{v:41,s:80},{v:39,s:78},{v:37,s:76},{v:35,s:74},{v:33,s:72},{v:31,s:70},{v:29,s:68},{v:27,s:66},{v:25,s:64},{v:23,s:62},{v:21,s:60},{v:19,s:50},{v:17,s:40},{v:15,s:30},{v:13,s:20},{v:11,s:10}],
+      "九年级":[{v:52,s:100},{v:50,s:95},{v:48,s:90},{v:45,s:85},{v:42,s:80},{v:40,s:78},{v:38,s:76},{v:36,s:74},{v:34,s:72},{v:32,s:70},{v:30,s:68},{v:28,s:66},{v:26,s:64},{v:24,s:62},{v:22,s:60},{v:20,s:50},{v:18,s:40},{v:16,s:30},{v:14,s:20},{v:12,s:10}]
+    }
+  },
+  runEnd: {
+    male: {
+       "七年级": [{v:235,s:100},{v:245,s:95},{v:255,s:90},{v:262,s:85},{v:270,s:80},{v:275,s:78},{v:280,s:76},{v:285,s:74},{v:290,s:72},{v:295,s:70},{v:300,s:68},{v:305,s:66},{v:310,s:64},{v:315,s:62},{v:320,s:60},{v:340,s:50},{v:360,s:40},{v:380,s:30},{v:400,s:20},{v:420,s:10}],
+       "八年级": [{v:230,s:100},{v:235,s:95},{v:240,s:90},{v:247,s:85},{v:255,s:80},{v:260,s:78},{v:265,s:76},{v:270,s:74},{v:275,s:72},{v:280,s:70},{v:285,s:68},{v:290,s:66},{v:295,s:64},{v:300,s:62},{v:305,s:60},{v:325,s:50},{v:345,s:40},{v:365,s:30},{v:385,s:20},{v:405,s:10}],
+       "九年级": [{v:220,s:100},{v:225,s:95},{v:230,s:90},{v:237,s:85},{v:245,s:80},{v:250,s:78},{v:255,s:76},{v:260,s:74},{v:265,s:72},{v:270,s:70},{v:275,s:68},{v:280,s:66},{v:285,s:64},{v:290,s:62},{v:295,s:60},{v:315,s:50},{v:335,s:40},{v:355,s:30},{v:375,s:20},{v:395,s:10}]
+    },
+    female: {
+      "七年级":[{v:213,s:100},{v:222,s:95},{v:229,s:90},{v:237,s:85},{v:245,s:80},{v:250,s:78},{v:255,s:76},{v:260,s:74},{v:265,s:72},{v:270,s:70},{v:275,s:68},{v:280,s:66},{v:285,s:64},{v:290,s:62},{v:295,s:60},{v:305,s:50},{v:315,s:40},{v:325,s:30},{v:335,s:20},{v:345,s:10}],
+      "八年级":[{v:210,s:100},{v:217,s:95},{v:224,s:90},{v:232,s:85},{v:240,s:80},{v:245,s:78},{v:250,s:76},{v:255,s:74},{v:260,s:72},{v:265,s:70},{v:270,s:68},{v:275,s:66},{v:280,s:64},{v:285,s:62},{v:290,s:60},{v:300,s:50},{v:310,s:40},{v:320,s:30},{v:330,s:20},{v:340,s:10}],
+      "九年级":[{v:205,s:100},{v:212,s:95},{v:219,s:90},{v:227,s:85},{v:235,s:80},{v:240,s:78},{v:245,s:76},{v:250,s:74},{v:255,s:72},{v:260,s:70},{v:265,s:68},{v:270,s:66},{v:275,s:64},{v:280,s:62},{v:285,s:60},{v:295,s:50},{v:305,s:40},{v:315,s:30},{v:325,s:20},{v:335,s:10}]
+    }
+  }
+};
+
+const POWER_BONUS_MALE = {"七年级":{full:13,step:1,max:10},"八年级":{full:14,step:1,max:10},"九年级":{full:15,step:1,max:10}};
+const POWER_BONUS_FEMALE = {"七年级":{full:50,step:1,max:10},"八年级":{full:51,step:1,max:10},"九年级":{full:52,step:1,max:10}};
+const RUN_BONUS_MALE = [{sec:35,add:10},{sec:32,add:9},{sec:29,add:8},{sec:26,add:7},{sec:23,add:6},{sec:20,add:5},{sec:16,add:4},{sec:12,add:3},{sec:8,add:2},{sec:4,add:1}];
+const RUN_BONUS_FEMALE = [{sec:50,add:10},{sec:45,add:9},{sec:40,add:8},{sec:35,add:7},{sec:30,add:6},{sec:25,add:5},{sec:20,add:4},{sec:15,add:3},{sec:10,add:2},{sec:5,add:1}];
+
+function getVal(id){
+  const el = document.getElementById(id);
+  if(!el) return null;
+  const v = el.value.trim();
+  if(v === '') return null; // 空字符串视为未填
+  const num = parseFloat(v);
+  if(isNaN(num)) return 'invalid'; // 非数字字符视为无效输入
+  return num;
+}
+
+function renderInput(){
+  const g=gradeSel.value;
+  const sex=genderSel.value;
+  const powerText=sex==="male"?"引体向上(次)":"1分钟仰卧起坐(次)";
+  const runText=sex==="male"?"1000米":"800米";
+
+  // 切换时清空结果区
+  resultBox.innerHTML = '';
+
+  inputArea.innerHTML=`
+    <div class="form-group"><label>BMI</label><input id="bmi" min="0" step="0.1" type="number" value="${getVal('bmi')??''}"></div>
+    <div class="form-group"><label>肺活量(ml)</label><input id="lung" min="0" type="number" value="${getVal('lung')??''}"></div>
+    <div class="form-group"><label>50米跑(秒)</label><input id="run50" min="0" step="0.1" type="number" value="${getVal('run50')??''}"></div>
+    <div class="form-group"><label>坐位体前屈(cm)</label><input id="sit" step="0.1" type="number" value="${getVal('sit')??''}"></div>
+    <div class="form-group"><label>立定跳远(cm)</label><input id="jump" min="0" type="number" value="${getVal('jump')??''}"></div>
+    <div class="form-group"><label>${powerText}</label><input id="power" min="0" type="number" value="${getVal('power')??''}"></div>
+    <div class="form-group">
+      <label>${runText}</label>
+      <div class="time-group">
+        <input id="run_min" min="0" type="number" value="${getVal('run_min')??''}">
+        <span class="time-unit">分</span>
+        <input id="run_sec" min="0" step="0.1" type="number" value="${getVal('run_sec')??''}">
+        <span class="time-unit">秒</span>
+      </div>
+    </div>
+  `;
+}
+
+function clearAll(){
+  // 清空所有输入框
+  const inputs = document.querySelectorAll('#inputArea input');
+  inputs.forEach(inp => inp.value = '');
+  resultBox.innerHTML = '';
+}
+
+function calcBmiScore(val,table){
+  if(val===null || val==='invalid') return 0;
+  for(let item of table){const [min,max,s]=item;if(val>=min&&val<=max)return s;}
+  return 0;
+}
+function calcHigh(val,list){
+  if(val===null || val==='invalid') return 0;
+  for(let item of list){if(val>=item.v)return item.s;}
+  return list[list.length-1].s;
+}
+function calcLow(val,list){
+  if(val===null || val==='invalid') return 0;
+  for(let item of list){if(val<=item.v)return item.s;}
+  return list[list.length-1].s;
+}
+
+function getPowerBonus(sex,grade,real){
+  if(real===null || real==='invalid') return 0;
+  let cfg=sex==="male"?POWER_BONUS_MALE[grade]:POWER_BONUS_FEMALE[grade];
+  const over=real-cfg.full;
+  if (over <= 0) return 0;
+  const bonus = Math.floor(over) * cfg.step;
+  return Math.min(bonus, cfg.max);
+}
+
+function getRunBonus(sex,fullSec,realSec){
+  if(realSec===null || realSec==='invalid') return 0;
+  const diff=fullSec-realSec;
+  if(diff<=0)return 0;
+  const list=sex==="male"?RUN_BONUS_MALE:RUN_BONUS_FEMALE;
+  let add=0;
+  for(let item of list){if(diff>=item.sec){add=item.add;break;}}
+  return add;
+}
+
+function calc(){
+  const g=gradeSel.value;
+  const sex=genderSel.value;
+  const min=getVal('run_min');
+  const sec=getVal('run_sec');
+  let runEnd=null;
+  let runEndInvalid = false;
+  if(min !== null && sec !== null){
+    if(min === 'invalid' || sec === 'invalid') {
+      runEndInvalid = true;
+    } else {
+      runEnd = min*60+sec;
+    }
+  } else if(min === 'invalid' || sec === 'invalid') {
+    runEndInvalid = true;
+  }
+
+  const bmi=getVal('bmi');
+  const lung=getVal('lung');
+  const run50=getVal('run50');
+  const sit=getVal('sit');
+  const jump=getVal('jump');
+  const power=getVal('power');
+
+  // 收集未填项（null）和无效输入（'invalid'）
+  const missing = [];
+  const invalid = [];
+  if (bmi === null) missing.push('BMI'); else if (bmi === 'invalid') invalid.push('BMI');
+  if (lung === null) missing.push('肺活量'); else if (lung === 'invalid') invalid.push('肺活量');
+  if (run50 === null) missing.push('50米跑'); else if (run50 === 'invalid') invalid.push('50米跑');
+  if (sit === null) missing.push('坐位体前屈'); else if (sit === 'invalid') invalid.push('坐位体前屈');
+  if (jump === null) missing.push('立定跳远'); else if (jump === 'invalid') invalid.push('立定跳远');
+  if (power === null) missing.push(sex === 'male' ? '引体向上' : '仰卧起坐'); else if (power === 'invalid') invalid.push(sex === 'male' ? '引体向上' : '仰卧起坐');
+  if (runEnd === null && !runEndInvalid) missing.push(sex === 'male' ? '1000米' : '800米');
+  if (runEndInvalid) invalid.push(sex === 'male' ? '1000米' : '800米');
+
+  // 计算得分（无效输入按0分处理）
+  const sBmi=calcBmiScore(bmi,STANDARD.bmi[sex][g]);
+  const sLung=calcHigh(lung,STANDARD.lung[sex][g]);
+  const sRun50=calcLow(run50,STANDARD.run50[sex][g]);
+  const sSit=calcHigh(sit,STANDARD.sit[sex][g]);
+  const sJump=calcHigh(jump,STANDARD.jump[sex][g]);
+  const sPowerBase=calcHigh(power,STANDARD.power[sex][g]);
+  const sRunEndBase=calcLow(runEnd,STANDARD.runEnd[sex][g]);
+
+  const runFullSec=STANDARD.runEnd[sex][g][0].v;
+  const addPower=getPowerBonus(sex,g,power);
+  const addRun=getRunBonus(sex,runFullSec,runEnd);
+
+  const baseTotal = (
+    sBmi * WEIGHT.bmi / 100 +
+    sLung * WEIGHT.lung / 100 +
+    sRun50 * WEIGHT.run50 / 100 +
+    sSit * WEIGHT.sit / 100 +
+    sJump * WEIGHT.jump / 100 +
+    sPowerBase * WEIGHT.power / 100 +
+    sRunEndBase * WEIGHT.runEnd / 100
+  );
+  const addTotal = addPower + addRun;
+  const totalNum = baseTotal + addTotal;
+  const total = totalNum.toFixed(1);
+
+  let examScore;
+  if(totalNum>=80)examScore=15;
+  else if(totalNum>=75)examScore=14;
+  else if(totalNum>=70)examScore=13;
+  else if(totalNum>=65)examScore=12;
+  else if(totalNum>=60)examScore=11;
+  else examScore=9;
+
+  let warningHtml = '';
+  if (invalid.length > 0) {
+    warningHtml = `以下项目输入无效（非数字），按 0 分计算：${invalid.join('、')}<br><br>`;
+  }
+  if (missing.length > 0) {
+    warningHtml += `以下项目未填写，按 0 分计算：${missing.join('、')}<br><br>`;
+  }
+
+  // 构建单项显示，用“未填”或“无效”代替0
+  function fmtScore(val, baseScore) {
+    if (val === null) return '未填';
+    if (val === 'invalid') return '无效';
+    return baseScore;
+  }
+
+  let html = warningHtml;
+  html += `
+【单项基础得分】<br>
+BMI：${fmtScore(bmi, sBmi)}<br>
+肺活量：${fmtScore(lung, sLung)}<br>
+50米跑：${fmtScore(run50, sRun50)}<br>
+坐位体前屈：${fmtScore(sit, sSit)}<br>
+立定跳远：${fmtScore(jump, sJump)}<br>
+力量基础：${fmtScore(power, sPowerBase)}<br>
+耐力跑基础：${fmtScore(runEnd, sRunEndBase)}
+  `;
+  if(addPower > 0 || addRun > 0){
+    html += `
+<br><br>【加分项】<br>
+力量项目加分：+${addPower}<br>耐力跑加分：+${addRun}
+    `;
+  }
+  html += `
+<br><br>【综合结果】<br>
+学年体质加权总分：<strong>${total} 分</strong><br>
+体育中考折算得分：<strong>${examScore} 分</strong>
+  `;
+  resultBox.innerHTML = html;
+}
+
+gradeSel.addEventListener('change',renderInput);
+genderSel.addEventListener('change',renderInput);
+window.onload=renderInput;
+</script>
+</body>
+</html>  opacity: 0.92;
 }
 .result {
   margin-top: var(--space4);
