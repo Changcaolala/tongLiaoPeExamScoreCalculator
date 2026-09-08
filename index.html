@@ -126,7 +126,6 @@ input:focus, select:focus {
   opacity: 0.92;
 }
 .btn-clear {
-  width: 100%;
   height: 44px;
   border-radius: var(--radius-md);
   background: transparent;
@@ -135,16 +134,19 @@ input:focus, select:focus {
   border: 1px solid var(--border);
   cursor: pointer;
   transition: all 0.2s;
-  margin-top: 12px;
 }
-.btn-clear:hover {
+.btn-clear:hover:not(:disabled) {
   background: rgba(128, 128, 128, 0.1);
   border-color: var(--primary);
 }
 @media (prefers-color-scheme: dark) {
-  .btn-clear:hover {
+  .btn-clear:hover:not(:disabled) {
     background: rgba(255, 255, 255, 0.08);
   }
+}
+.btn-clear:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 .result {
   margin-top: var(--space4);
@@ -176,7 +178,6 @@ input:focus, select:focus {
   width: 22px;
   text-align: left;
 }
-/* MD3风格右上角GitHub图标 */
 .github-header {
   max-width:1200px;
   margin:0 auto;
@@ -240,7 +241,10 @@ input:focus, select:focus {
 
   <div class="card">
     <button class="btn-primary" onclick="calc()">计算成绩</button>
-    <button class="btn-clear" onclick="clearAll()">清空所有</button>
+    <div style="display: flex; gap: 12px; margin-top: 12px;">
+      <button class="btn-clear" id="clearBtn" onclick="clearAll()" style="flex: 2;">清空所有</button>
+      <button class="btn-clear" id="undoBtn" onclick="undoClear()" style="flex: 1;" disabled>撤销</button>
+    </div>
     <div class="result" id="result"></div>
   </div>
 </div>
@@ -250,6 +254,8 @@ const gradeSel = document.getElementById('grade');
 const genderSel = document.getElementById('gender');
 const inputArea = document.getElementById('inputArea');
 const resultBox = document.getElementById('result');
+const clearBtn = document.getElementById('clearBtn');
+const undoBtn = document.getElementById('undoBtn');
 
 const WEIGHT = {
   bmi: 15, lung: 15, run50: 20, sit: 10, jump: 10, power: 10, runEnd: 20
@@ -335,7 +341,7 @@ const STANDARD = {
        "九年级": [{v:220,s:100},{v:225,s:95},{v:230,s:90},{v:237,s:85},{v:245,s:80},{v:250,s:78},{v:255,s:76},{v:260,s:74},{v:265,s:72},{v:270,s:70},{v:275,s:68},{v:280,s:66},{v:285,s:64},{v:290,s:62},{v:295,s:60},{v:315,s:50},{v:335,s:40},{v:355,s:30},{v:375,s:20},{v:395,s:10}]
     },
     female: {
-      "七年级":[{v:213,s:100},{v:222,s:95},{v:229,s:90},{v:237,s:85},{v:245,s:80},{v:250,s:78},{v:255,s:76},{v:260,s:74},{v:265,s:72},{v:270,s:70},{v:275,s:68},{v:280,s:66},{v:285,s:64},{v:290,s:62},{v:295,s:60},{v:305,s:50},{v:315,s:40},{v:325,s:30},{v:335,s:20},{v:345,s:10}],
+      "七年级":[{v:215,s:100},{v:222,s:95},{v:229,s:90},{v:237,s:85},{v:245,s:80},{v:250,s:78},{v:255,s:76},{v:260,s:74},{v:265,s:72},{v:270,s:70},{v:275,s:68},{v:280,s:66},{v:285,s:64},{v:290,s:62},{v:295,s:60},{v:305,s:50},{v:315,s:40},{v:325,s:30},{v:335,s:20},{v:345,s:10}],
       "八年级":[{v:210,s:100},{v:217,s:95},{v:224,s:90},{v:232,s:85},{v:240,s:80},{v:245,s:78},{v:250,s:76},{v:255,s:74},{v:260,s:72},{v:265,s:70},{v:270,s:68},{v:275,s:66},{v:280,s:64},{v:285,s:62},{v:290,s:60},{v:300,s:50},{v:310,s:40},{v:320,s:30},{v:330,s:20},{v:340,s:10}],
       "九年级":[{v:205,s:100},{v:212,s:95},{v:219,s:90},{v:227,s:85},{v:235,s:80},{v:240,s:78},{v:245,s:76},{v:250,s:74},{v:255,s:72},{v:260,s:70},{v:265,s:68},{v:270,s:66},{v:275,s:64},{v:280,s:62},{v:285,s:60},{v:295,s:50},{v:305,s:40},{v:315,s:30},{v:325,s:20},{v:335,s:10}]
     }
@@ -347,14 +353,27 @@ const POWER_BONUS_FEMALE = {"七年级":{full:50,step:1,max:10},"八年级":{ful
 const RUN_BONUS_MALE = [{sec:35,add:10},{sec:32,add:9},{sec:29,add:8},{sec:26,add:7},{sec:23,add:6},{sec:20,add:5},{sec:16,add:4},{sec:12,add:3},{sec:8,add:2},{sec:4,add:1}];
 const RUN_BONUS_FEMALE = [{sec:50,add:10},{sec:45,add:9},{sec:40,add:8},{sec:35,add:7},{sec:30,add:6},{sec:25,add:5},{sec:20,add:4},{sec:15,add:3},{sec:10,add:2},{sec:5,add:1}];
 
+let savedInputs = null;
+
 function getVal(id){
   const el = document.getElementById(id);
   if(!el) return null;
   const v = el.value.trim();
-  if(v === '') return null; // 空字符串视为未填
+  if(v === '') return null;
   const num = parseFloat(v);
-  if(isNaN(num)) return 'invalid'; // 非数字字符视为无效输入
+  if(isNaN(num)) return 'invalid';
   return num;
+}
+
+function updateClearButtonState() {
+  const inputs = document.querySelectorAll('#inputArea input');
+  let allEmpty = true;
+  inputs.forEach(inp => {
+    if (inp.value.trim() !== '') {
+      allEmpty = false;
+    }
+  });
+  clearBtn.disabled = allEmpty;
 }
 
 function renderInput(){
@@ -363,8 +382,9 @@ function renderInput(){
   const powerText=sex==="male"?"引体向上(次)":"1分钟仰卧起坐(次)";
   const runText=sex==="male"?"1000米":"800米";
 
-  // 切换时清空结果区
   resultBox.innerHTML = '';
+  savedInputs = null;
+  undoBtn.disabled = true;
 
   inputArea.innerHTML=`
     <div class="form-group"><label>BMI</label><input id="bmi" min="0" step="0.1" type="number" value="${getVal('bmi')??''}"></div>
@@ -383,28 +403,52 @@ function renderInput(){
       </div>
     </div>
   `;
+
+  updateClearButtonState();
 }
 
 function clearAll(){
-  // 清空所有输入框
   const inputs = document.querySelectorAll('#inputArea input');
+  savedInputs = {};
+  inputs.forEach(inp => {
+    savedInputs[inp.id] = inp.value;
+  });
   inputs.forEach(inp => inp.value = '');
   resultBox.innerHTML = '';
+  undoBtn.disabled = false;
+  updateClearButtonState();
+}
+
+function undoClear(){
+  if (!savedInputs) return;
+  const inputs = document.querySelectorAll('#inputArea input');
+  inputs.forEach(inp => {
+    if (savedInputs.hasOwnProperty(inp.id)) {
+      inp.value = savedInputs[inp.id];
+    }
+  });
+  savedInputs = null;
+  undoBtn.disabled = true;
+  updateClearButtonState();
+  calc();
 }
 
 function calcBmiScore(val,table){
   if(val===null || val==='invalid') return 0;
-  for(let item of table){const [min,max,s]=item;if(val>=min&&val<=max)return s;}
+  const eps = 1e-9;
+  for(let item of table){const [min,max,s]=item;if(val >= min - eps && val <= max + eps)return s;}
   return 0;
 }
 function calcHigh(val,list){
   if(val===null || val==='invalid') return 0;
-  for(let item of list){if(val>=item.v)return item.s;}
+  const eps = 1e-9;
+  for(let item of list){if(val >= item.v - eps)return item.s;}
   return list[list.length-1].s;
 }
 function calcLow(val,list){
   if(val===null || val==='invalid') return 0;
-  for(let item of list){if(val<=item.v)return item.s;}
+  const eps = 1e-9;
+  for(let item of list){if(val <= item.v + eps)return item.s;}
   return list[list.length-1].s;
 }
 
@@ -451,7 +495,6 @@ function calc(){
   const jump=getVal('jump');
   const power=getVal('power');
 
-  // 收集未填项（null）和无效输入（'invalid'）
   const missing = [];
   const invalid = [];
   if (bmi === null) missing.push('BMI'); else if (bmi === 'invalid') invalid.push('BMI');
@@ -463,7 +506,6 @@ function calc(){
   if (runEnd === null && !runEndInvalid) missing.push(sex === 'male' ? '1000米' : '800米');
   if (runEndInvalid) invalid.push(sex === 'male' ? '1000米' : '800米');
 
-  // 计算得分（无效输入按0分处理）
   const sBmi=calcBmiScore(bmi,STANDARD.bmi[sex][g]);
   const sLung=calcHigh(lung,STANDARD.lung[sex][g]);
   const sRun50=calcLow(run50,STANDARD.run50[sex][g]);
@@ -505,7 +547,6 @@ function calc(){
     warningHtml += `以下项目未填写，按 0 分计算：${missing.join('、')}<br><br>`;
   }
 
-  // 构建单项显示，用“未填”或“无效”代替0
   function fmtScore(val, baseScore) {
     if (val === null) return '未填';
     if (val === 'invalid') return '无效';
@@ -536,6 +577,12 @@ BMI：${fmtScore(bmi, sBmi)}<br>
   `;
   resultBox.innerHTML = html;
 }
+
+inputArea.addEventListener('input', function(e) {
+  if (e.target.tagName === 'INPUT') {
+    updateClearButtonState();
+  }
+});
 
 gradeSel.addEventListener('change',renderInput);
 genderSel.addEventListener('change',renderInput);
