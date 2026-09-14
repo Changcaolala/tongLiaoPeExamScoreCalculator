@@ -183,6 +183,9 @@ input:focus, select:focus {
   margin:0 auto;
   padding:0 16px;
   text-align:right;
+  display:flex;
+  justify-content:flex-end;
+  gap:12px;
 }
 .github-link {
   display:inline-block;
@@ -193,6 +196,7 @@ input:focus, select:focus {
   background:rgba(0,0,0,0.04);
   color:inherit;
   transition:all 0.2s;
+  cursor:pointer;
 }
 @media (prefers-color-scheme: dark) {
   .github-link { background: rgba(255,255,255,0.06); }
@@ -200,6 +204,48 @@ input:focus, select:focus {
 .github-link:hover { background: rgba(0,0,0,0.1); }
 @media (prefers-color-scheme: dark) {
   .github-link:hover { background: rgba(255,255,255,0.12); }
+}
+
+/* 弹窗样式 */
+.modal-mask{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.45);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+  padding:16px;
+}
+.modal-box{
+  background:var(--card);
+  color:var(--text);
+  border-radius:var(--radius-lg);
+  max-width:520px;
+  width:100%;
+  max-height:80vh;
+  overflow:auto;
+  padding:24px;
+}
+.modal-title{
+  font-size:18px;
+  font-weight:500;
+  margin-bottom:16px;
+}
+.modal-content{
+  font-size:14px;
+  line-height:1.7;
+  color:var(--hint);
+}
+.modal-close{
+  margin-top:18px;
+  width:100%;
+  height:44px;
+  border-radius:var(--radius-md);
+  border:1px solid var(--border);
+  background:transparent;
+  color:var(--text);
+  cursor:pointer;
 }
 </style>
 </head>
@@ -210,6 +256,26 @@ input:focus, select:focus {
       <path d="M12,2A10,10 0 0,0 2,12C2,16.42 4.87,20.17 8.84,21.5C9.34,21.58 9.5,21.27 9.5,21C9.5,20.77 9.5,20.14 9.5,19.31C6.73,19.91 6.14,17.97 6.14,17.97C5.68,16.81 5.1,16.5 5.1,16.5C4.12,15.82 5.1,15.84 5.1,15.84C6.1,15.94 6.63,16.91 6.63,16.91C7.5,18.45 8.97,18 9.54,17.76C9.63,17.11 9.89,16.67 10.17,16.42C7.95,16.16 5.65,15.26 5.65,11.5C5.65,10.39 6.06,9.5 6.77,8.79C6.65,8.54 6.31,7.5 6.8,6.15C6.8,6.15 7.59,5.88 9.5,7.17C10.29,6.94 11.15,6.82 12,6.82C12.85,6.82 13.71,6.94 14.5,7.17C16.41,5.88 17.2,6.15 17.2,6.15C17.69,7.5 17.35,8.54 17.23,8.79C17.94,9.5 18.35,10.39 18.35,11.5C18.35,15.28 16.04,16.15 13.81,16.41C14.17,16.72 14.5,17.33 14.5,18.26C14.5,19.6 14.5,20.68 14.5,21C14.5,21.27 14.66,21.59 15.17,21.5C19.13,20.16 22,16.42 22,12A10,10 0 0,0 12,2Z" />
     </svg>
   </a>
+  <!-- 信息图标：圆圈i -->
+  <div class="github-link" id="infoBtn" title="免责声明">
+    <svg viewBox="0 0 24 24" fill="currentColor" width="100%" height="100%">
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
+    </svg>
+  </div>
+</div>
+
+<!-- 免责弹窗 -->
+<div class="modal-mask" id="modalMask">
+  <div class="modal-box">
+    <div class="modal-title">免责声明</div>
+    <div class="modal-content">
+<p>1. 本体育中考分数计算器为自制学习工具，仅用于日常估分参考，非官方系统。最终体育中考成绩以现场测试成绩及教育主管部门发布的正式成绩为准。</p>
+<p>2. 本工具计算规则参照官方评分文件制作，但不保证完全适配政策临时调整。</p>
+<p>3. <strong>本工具不收集、不上传、不保存任何使用者的个人信息、成绩数据</strong>。</p>
+<p>4. 使用者使用本工具产生的一切后果由使用者自行承担，工具制作者不承担任何相关责任。</p>
+    </div>
+    <button class="modal-close" id="modalCloseBtn">关闭</button>
+  </div>
 </div>
 
 <div class="container">
@@ -233,12 +299,10 @@ input:focus, select:focus {
       </div>
     </div>
   </div>
-
   <div class="card">
     <div class="title">测试成绩录入</div>
     <div class="desktop-grid" id="inputArea"></div>
   </div>
-
   <div class="card">
     <button class="btn-primary" onclick="calc()">计算成绩</button>
     <div style="display: flex; gap: 12px; margin-top: 12px;">
@@ -248,19 +312,33 @@ input:focus, select:focus {
     <div class="result" id="result"></div>
   </div>
 </div>
-
 <script>
+//弹窗逻辑
+const infoBtn = document.getElementById('infoBtn');
+const modalMask = document.getElementById('modalMask');
+const modalCloseBtn = document.getElementById('modalCloseBtn');
+infoBtn.addEventListener('click',()=>{
+  modalMask.style.display='flex';
+});
+modalCloseBtn.addEventListener('click',()=>{
+  modalMask.style.display='none';
+});
+modalMask.addEventListener('click',(e)=>{
+  if(e.target === modalMask){
+    modalMask.style.display='none';
+  }
+});
+
+
 const gradeSel = document.getElementById('grade');
 const genderSel = document.getElementById('gender');
 const inputArea = document.getElementById('inputArea');
 const resultBox = document.getElementById('result');
 const clearBtn = document.getElementById('clearBtn');
 const undoBtn = document.getElementById('undoBtn');
-
 const WEIGHT = {
   bmi: 15, lung: 15, run50: 20, sit: 10, jump: 10, power: 10, runEnd: 20
 };
-
 const STANDARD = {
   bmi: {
     male: {
@@ -347,14 +425,11 @@ const STANDARD = {
     }
   }
 };
-
 const POWER_BONUS_MALE = {"七年级":{full:13,step:1,max:10},"八年级":{full:14,step:1,max:10},"九年级":{full:15,step:1,max:10}};
 const POWER_BONUS_FEMALE = {"七年级":{full:50,step:1,max:10},"八年级":{full:51,step:1,max:10},"九年级":{full:52,step:1,max:10}};
 const RUN_BONUS_MALE = [{sec:35,add:10},{sec:32,add:9},{sec:29,add:8},{sec:26,add:7},{sec:23,add:6},{sec:20,add:5},{sec:16,add:4},{sec:12,add:3},{sec:8,add:2},{sec:4,add:1}];
 const RUN_BONUS_FEMALE = [{sec:50,add:10},{sec:45,add:9},{sec:40,add:8},{sec:35,add:7},{sec:30,add:6},{sec:25,add:5},{sec:20,add:4},{sec:15,add:3},{sec:10,add:2},{sec:5,add:1}];
-
 let savedInputs = null;
-
 function getVal(id){
   const el = document.getElementById(id);
   if(!el) return null;
@@ -364,7 +439,6 @@ function getVal(id){
   if(isNaN(num)) return 'invalid';
   return num;
 }
-
 function updateClearButtonState() {
   const inputs = document.querySelectorAll('#inputArea input');
   let allEmpty = true;
@@ -375,17 +449,14 @@ function updateClearButtonState() {
   });
   clearBtn.disabled = allEmpty;
 }
-
 function renderInput(){
   const g=gradeSel.value;
   const sex=genderSel.value;
   const powerText=sex==="male"?"引体向上(次)":"1分钟仰卧起坐(次)";
   const runText=sex==="male"?"1000米":"800米";
-
   resultBox.innerHTML = '';
   savedInputs = null;
   undoBtn.disabled = true;
-
   inputArea.innerHTML=`
     <div class="form-group"><label>BMI</label><input id="bmi" min="0" step="0.1" type="number" value="${getVal('bmi')??''}"></div>
     <div class="form-group"><label>肺活量(ml)</label><input id="lung" min="0" type="number" value="${getVal('lung')??''}"></div>
@@ -403,10 +474,8 @@ function renderInput(){
       </div>
     </div>
   `;
-
   updateClearButtonState();
 }
-
 function clearAll(){
   const inputs = document.querySelectorAll('#inputArea input');
   savedInputs = {};
@@ -418,7 +487,6 @@ function clearAll(){
   undoBtn.disabled = false;
   updateClearButtonState();
 }
-
 function undoClear(){
   if (!savedInputs) return;
   const inputs = document.querySelectorAll('#inputArea input');
@@ -432,7 +500,6 @@ function undoClear(){
   updateClearButtonState();
   calc();
 }
-
 function calcBmiScore(val,table){
   if(val===null || val==='invalid') return 0;
   const eps = 1e-9;
@@ -443,15 +510,14 @@ function calcHigh(val,list){
   if(val===null || val==='invalid') return 0;
   const eps = 1e-9;
   for(let item of list){if(val >= item.v - eps)return item.s;}
-  return list[list.length-1].s;
+  return 0;   // 低于表格最低阈值 → 0 分
 }
 function calcLow(val,list){
   if(val===null || val==='invalid') return 0;
   const eps = 1e-9;
   for(let item of list){if(val <= item.v + eps)return item.s;}
-  return list[list.length-1].s;
+  return 0;   // 高于表格最高阈值 → 0 分
 }
-
 function getPowerBonus(sex,grade,real){
   if(real===null || real==='invalid') return 0;
   let cfg=sex==="male"?POWER_BONUS_MALE[grade]:POWER_BONUS_FEMALE[grade];
@@ -460,7 +526,6 @@ function getPowerBonus(sex,grade,real){
   const bonus = Math.floor(over) * cfg.step;
   return Math.min(bonus, cfg.max);
 }
-
 function getRunBonus(sex,fullSec,realSec){
   if(realSec===null || realSec==='invalid') return 0;
   const diff=fullSec-realSec;
@@ -470,7 +535,6 @@ function getRunBonus(sex,fullSec,realSec){
   for(let item of list){if(diff>=item.sec){add=item.add;break;}}
   return add;
 }
-
 function calc(){
   const g=gradeSel.value;
   const sex=genderSel.value;
@@ -487,13 +551,22 @@ function calc(){
   } else if(min === 'invalid' || sec === 'invalid') {
     runEndInvalid = true;
   }
+  let bmi=getVal('bmi');
+  let lung=getVal('lung');
+  let run50=getVal('run50');
+  const sit=getVal('sit');          // 坐位体前屈允许 0 和负数
+  let jump=getVal('jump');
+  const power=getVal('power');      // 力量项目允许 0 次
 
-  const bmi=getVal('bmi');
-  const lung=getVal('lung');
-  const run50=getVal('run50');
-  const sit=getVal('sit');
-  const jump=getVal('jump');
-  const power=getVal('power');
+  // 非正数视为无效输入
+  if (typeof bmi === 'number' && bmi <= 0) bmi = 'invalid';
+  if (typeof lung === 'number' && lung <= 0) lung = 'invalid';
+  if (typeof run50 === 'number' && run50 <= 0) run50 = 'invalid';
+  if (typeof jump === 'number' && jump <= 0) jump = 'invalid';
+  if (runEnd !== null && runEnd <= 0) {
+    runEnd = null;
+    runEndInvalid = true;
+  }
 
   const missing = [];
   const invalid = [];
@@ -505,7 +578,6 @@ function calc(){
   if (power === null) missing.push(sex === 'male' ? '引体向上' : '仰卧起坐'); else if (power === 'invalid') invalid.push(sex === 'male' ? '引体向上' : '仰卧起坐');
   if (runEnd === null && !runEndInvalid) missing.push(sex === 'male' ? '1000米' : '800米');
   if (runEndInvalid) invalid.push(sex === 'male' ? '1000米' : '800米');
-
   const sBmi=calcBmiScore(bmi,STANDARD.bmi[sex][g]);
   const sLung=calcHigh(lung,STANDARD.lung[sex][g]);
   const sRun50=calcLow(run50,STANDARD.run50[sex][g]);
@@ -513,11 +585,9 @@ function calc(){
   const sJump=calcHigh(jump,STANDARD.jump[sex][g]);
   const sPowerBase=calcHigh(power,STANDARD.power[sex][g]);
   const sRunEndBase=calcLow(runEnd,STANDARD.runEnd[sex][g]);
-
   const runFullSec=STANDARD.runEnd[sex][g][0].v;
   const addPower=getPowerBonus(sex,g,power);
   const addRun=getRunBonus(sex,runFullSec,runEnd);
-
   const baseTotal = (
     sBmi * WEIGHT.bmi / 100 +
     sLung * WEIGHT.lung / 100 +
@@ -530,7 +600,6 @@ function calc(){
   const addTotal = addPower + addRun;
   const totalNum = baseTotal + addTotal;
   const total = totalNum.toFixed(1);
-
   let examScore;
   if(totalNum>=80)examScore=15;
   else if(totalNum>=75)examScore=14;
@@ -538,21 +607,18 @@ function calc(){
   else if(totalNum>=65)examScore=12;
   else if(totalNum>=60)examScore=11;
   else examScore=9;
-
   let warningHtml = '';
   if (invalid.length > 0) {
-    warningHtml = `以下项目输入无效（非数字），按 0 分计算：${invalid.join('、')}<br><br>`;
+    warningHtml = `以下项目输入无效（非数字或非正数），按 0 分计算：${invalid.join('、')}<br><br>`;
   }
   if (missing.length > 0) {
     warningHtml += `以下项目未填写，按 0 分计算：${missing.join('、')}<br><br>`;
   }
-
   function fmtScore(val, baseScore) {
     if (val === null) return '未填';
     if (val === 'invalid') return '无效';
     return baseScore;
   }
-
   let html = warningHtml;
   html += `
 【单项基础得分】<br>
@@ -577,13 +643,11 @@ BMI：${fmtScore(bmi, sBmi)}<br>
   `;
   resultBox.innerHTML = html;
 }
-
 inputArea.addEventListener('input', function(e) {
   if (e.target.tagName === 'INPUT') {
     updateClearButtonState();
   }
 });
-
 gradeSel.addEventListener('change',renderInput);
 genderSel.addEventListener('change',renderInput);
 window.onload=renderInput;
